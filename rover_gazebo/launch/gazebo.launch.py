@@ -35,10 +35,10 @@ def generate_launch_description():
 
     pkg_path = get_package_share_directory("rover_gazebo")
     pkg_gazebo_ros = get_package_share_directory("gazebo_ros")
-    # pkg_rover_localization = get_package_share_directory("rover_localization")
+    pkg_rover_localization = get_package_share_directory("rover_localization")
     # pkg_rover_navigation = get_package_share_directory("rover_navigation")
 
-    # rviz_config = os.path.join(pkg_path, "rviz", "default.rviz")
+    rviz_config = os.path.join(pkg_path, "rviz", "urc_bot.rviz")
 
     ### ARGS ###
     world = LaunchConfiguration("world")
@@ -58,10 +58,10 @@ def generate_launch_description():
         "pause_gz", default_value="False", description="Whether to pause gazebo"
     )
 
-    # launch_rviz = LaunchConfiguration("launch_rviz")
-    # launch_rviz_cmd = DeclareLaunchArgument(
-    #     "launch_rviz", default_value="True", description="Whether launch rviz2"
-    # )
+    launch_rviz = LaunchConfiguration("launch_rviz")
+    launch_rviz_cmd = DeclareLaunchArgument(
+        "launch_rviz", default_value="True", description="Whether launch rviz2"
+    )
 
     initial_pose_x = LaunchConfiguration("initial_pose_x")
     initial_pose_x_cmd = DeclareLaunchArgument(
@@ -100,14 +100,14 @@ def generate_launch_description():
     # )
 
     # ### NODES ###
-    # rviz_cmd = Node(
-    #     name="rviz",
-    #     package="rviz2",
-    #     executable="rviz2",
-    #     arguments=["-d", rviz_config, "--ros-args", "--log-level", "Error"],
-    #     parameters=[{"use_sim_time": True}],
-    #     condition=IfCondition(PythonExpression([launch_rviz])),
-    # )
+    rviz_cmd = Node(
+        name="rviz",
+        package="rviz2",
+        executable="rviz2",
+        arguments=["-d", rviz_config, "--ros-args", "--log-level", "Error"],
+        parameters=[{"use_sim_time": True}],
+        condition=IfCondition(PythonExpression([launch_rviz])),
+    )
 
     ### LAUNCHS ###
     gazebo_client_cmd = IncludeLaunchDescription(
@@ -128,13 +128,12 @@ def generate_launch_description():
         }.items(),
     )
 
-    # localization_cmd = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(pkg_rover_localization, "launch", "localization.launch.py")
-    #     ),
-    #     launch_arguments={"use_sim_time": "True"}.items(),
-    # )
-
+    localization_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_rover_localization, "launch", "localization.launch.py")
+        ),
+        launch_arguments={"use_sim_time": "True"}.items(),
+    )
     # navigation_cmd = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource(
     #         os.path.join(pkg_rover_navigation, "launch", "bringup.launch.py")
@@ -164,16 +163,17 @@ def generate_launch_description():
             "initial_pose_yaw": initial_pose_yaw,
         }.items(),
     )
-    rtabmap_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_path, "launch/include", "rtabmap.launch.py")
-        ),
-    )
+    # rtabmap_cmd = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(pkg_path, "launch/include", "rtabmap.launch.py")
+    #     ),
+    # )
 
     ld = LaunchDescription()
 
     ld.add_action(launch_gui_cmd)
     ld.add_action(pause_gz_cmd)
+    ld.add_action(launch_rviz_cmd)
     ld.add_action(world_cmd)
     ld.add_action(initial_pose_x_cmd)
     ld.add_action(initial_pose_y_cmd)
@@ -181,8 +181,9 @@ def generate_launch_description():
     ld.add_action(initial_pose_yaw_cmd)
     ld.add_action(gazebo_client_cmd)
     ld.add_action(gazebo_server_cmd)
+    ld.add_action(localization_cmd)
     ld.add_action(cmd_vel_cmd)
     ld.add_action(spawn_cmd)
-    ld.add_action(rtabmap_cmd)
+    ld.add_action(rviz_cmd)
 
     return ld
